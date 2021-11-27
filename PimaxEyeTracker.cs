@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 using System.Runtime.InteropServices;
+using WebSocketSharp;
+using WebSocketSharp.Server;
 
 #if UNITY_EDITOR
 using System;
@@ -188,6 +190,38 @@ namespace Pimax.EyeTracking {
 		void OnDestroy() {
 			if (EyeTracker.Active) EyeTracker.Stop();
 		}
+	}
+
+	public class NeosPimaxEyeTracker
+	{
+		public WebSocketServer wssv;
+		public EyeTracker eyeTracker;
+
+		public void Main(string[] args)
+		{
+			Console.WriteLine("Press Esc to terminate, Press Enter to view Eye Tracking Data.");
+			AppDomain.CurrentDomain.ProcessExit += new EventHandler(OnProcessExit);
+
+			eyeTracker = new EyeTracker();
+			eyeTracker.Start();
+			eyeTracker.OnUpdate += OnEyeTrackerUpdate;
+			eyeTracker.OnStart += OnEyeTrackerStart;
+			eyeTracker.OnStop += OnEyeTrackerStop;
+		}
+
+        public class WebSocketImpl : WebSocketBehavior
+		{
+
+		}
+
+		public static void OnProcessExit(object sender, EventArgs e)
+		{
+			if (eyeTracker?.Active ?? false)
+				eyeTracker.Stop();
+			if (wssv.IsListening)
+				wssv.Stop();
+		}
+
 	}
 
 #if UNITY_EDITOR
