@@ -196,6 +196,7 @@ namespace Pimax.EyeTracking {
 	{
 		public WebSocketServer wssv;
 		public EyeTracker eyeTracker;
+		public message = "";
 
 		public void Main(string[] args)
 		{
@@ -207,11 +208,41 @@ namespace Pimax.EyeTracking {
 			eyeTracker.OnUpdate += OnEyeTrackerUpdate;
 			eyeTracker.OnStart += OnEyeTrackerStart;
 			eyeTracker.OnStop += OnEyeTrackerStop;
+
+			WebSocketClass.MakeServer();
+			while (wssv.IsListening)
+			{
+				if (Console.ReadKey().Key == ConsoleKey.Escape)
+				{
+					// Will close program    
+					wssv.Stop();
+				}
+				else
+				{
+					// Otherwise output our values
+					Console.WriteLine(NeosPimaxIntegration.UpdateExpressionParameters());
+				}
+				Thread.Sleep(200);
+
+			}
+
 		}
 
+		// Needs to be in its own class?
         public class WebSocketImpl : WebSocketBehavior
 		{
+			// Recieve empty string from Neos
+			protected override void OnMessage(MessageEventArgs e)
+			{
+				Send(UpdateExpressionParameters());
+			}
 
+			public static void MakeServer()
+			{
+				wssv = new WebSocketServer("ws://localhost:4649");
+				wssv.AddWebSocketService<WebSocketClass>("/WebSocketClass");
+				wssv.Start();
+			}
 		}
 
 		public static void OnProcessExit(object sender, EventArgs e)
@@ -220,6 +251,51 @@ namespace Pimax.EyeTracking {
 				eyeTracker.Stop();
 			if (wssv.IsListening)
 				wssv.Stop();
+		}
+
+		public static string UpdateExpressionParameters()
+		{
+			if (eyeTracker?.Active ?? false)
+			{
+				message = "";
+
+				// LeftEyeBlink
+				message += "[" +    eyeTracker.LeftEye.Expression.Blink.ToString() + "],";
+				// RightEyeBlink
+				message += "[" +    eyeTracker.RightEye.Expression.Blink.ToString() + "],";
+
+				// LeftEyeLid / Openness / Raise
+				message += "[" +    eyeTracker.LeftEye.Expression.Openness.ToString() + "],";
+				// RightEyeLid / Openness / Raise
+				message += "[" +    eyeTracker.RightEye.Expression.Openness.ToString() + "],";
+
+				// LeftEyeXGaze
+				message += "[" +    eyeTracker.LeftEye.Expression.PupilCenter.Item1.ToString() + ";";
+				// LeftEyeYGaze
+				message +=          eyeTracker.LeftEye.Expression.PupilCenter.Item2.ToString() + "],";
+
+				// RightEyeXGaze
+				message += "[" +    eyeTracker.RightEye.Expression.PupilCenter.Item1.ToString() + ";";
+				// RightEyeYGaze
+				message +=          eyeTracker.RightEye.Expression.PupilCenter.Item2.ToString() + "],";
+
+				// EyesXCombinedGaze
+				message += "[" + (  eyeTracker.RightEye.Expression.Blink ?
+									eyeTracker.LeftEye.Expression.PupilCenter.Item1.ToString() :
+									eyeTracker.RightEye.Expression.PupilCenter.Item1.ToString()) + "],";
+				// EyesYCombinedGaze
+				message += "[" + (  eyeTracker.RightEye.Expression.Blink ?
+									eyeTracker.LeftEye.Expression.PupilCenter.Item2.ToString() :
+									eyeTracker.RightEye.Expression.PupilCenter.Item2.ToString()) + "],";
+
+				return message;
+			}
+
+			else
+			{
+				return "EyeTrackerDisabled";
+			}
+
 		}
 
 	}

@@ -265,7 +265,6 @@ xcopy "$(SolutionDir)*.cs" "$(SolutionDir)..\VRCPimaxEyeTracker\PimaxEyeTracker"
     <None Include="$(SolutionDir)\aSeeVRClient\bin\aSeeVRClient.dll">
       <FileType>Document</FileType>
     </None>
-    <None Include="NeosPimaxEyeTracker.cs" />
     <None Include="PimaxEyeTracker.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -34,9 +34,6 @@
     <None Include="PimaxEyeTracker.cs">
       <Filter>Source Files</Filter>
     </None>
-    <None Include="NeosPimaxEyeTracker.cs">
-      <Filter>Source Files</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="PimaxEyeTracker.cpp">
